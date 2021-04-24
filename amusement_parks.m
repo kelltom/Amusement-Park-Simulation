@@ -4,10 +4,11 @@ clear;
 lambda = 10;            % Person arrival rate (per hour)
 mu_g = 20 /60/60;       % Mean time to process person at gate (seconds to hours)
 offset_g = 10 /60/60;   % Max variance in process time at the gate (seconds to hours)
-mu_w = 30 ./60./60;     % Mean time for someone to walk from place to place (seconds to hours)
+mu_w = 1 ./60;     % Mean time for someone to walk from place to place (minutes to hours)
 mu = [2 3] ./60;        % Mean time for ride to finish (minutes to hours)
 offset_r = [30, 20] ./60./60;  % Max variance in ride time (seconds to hours)
 capacity = [8 6];       % Ride capacity (num of people)
+leave = 0.10;           % Percent chance visitor will leave
 
 % State Variables
 q_gate = 0;             % Arrival gate queue length
@@ -42,7 +43,7 @@ while time < max_time
     [t_min, index] = min(times);
     
     time = t_min; % Move clock
-    
+
     switch index
         case 1 % if visitor arrives
             if busy_g % if gatekeeper is busy
@@ -55,10 +56,8 @@ while time < max_time
             t_visitor = time + expon(1/lambda); % time next visitor arrives
             
         case 2 % gatekeeper finishes processing person - they enter park
-            %%% WE NEED A FANCY WAY TO DETERMINE THE TIME IT TAKES FOR PERSON TO FINISH WALKING %%%
-            %%% IT NEEDS TO BE BASED ON THE NUMBER OF PPL CURRENTLY WALKING (more walkers, faster they finish walking) %%%
             walking = walking + 1;              % visitor begins walking around
-            t_walking = time + expon(mu_w);     % set time when person will get to their destination
+            t_walking = time + (expon(mu_w) / walking);     % set time when person will get to their destination - depends on num of ppl walking
             total_in_park = total_in_park + 1;  % add one person to park total
             
             if q_gate > 0 % if people are lined up at the gate
@@ -71,10 +70,25 @@ while time < max_time
             
         case 3 % person finishes walking around
             walking = walking - 1; % no longer walking around
-            if walking == 0
-                t_walking = inf;
+            
+            % decide if visitor leaves
+            if rand() < leave
+                total_in_park = total_in_park - 1; % visitor leaves
+                return;
             end
             
+            % if they stay, decide what ride they go on next
+            choice = randi([1 length(q)]); % get ride index
+            q(choice) = q(choice) + 1; % get in line
+            if busy(choice) == false % if the ride is not active
+                if q(choice) >= capacity(choice) % and there's enough ppl in line to fill the ride
+                    q(choice) = q(choice) - capacity(choice); % remove people from queue
+                    t_ride(choice) = time + (give_or_take(mu(choice), offset_r)); % set time when ride will finish
+                    busy(choice) = true;
+                end
+            end
+            
+            t_walking = time + (expon(mu_w) / walking); % set time next person will finish walking
             
         case 4 % ride 1 finishes
             %%% HERE, WE ARE ALSO GONNA HAVE TO SET FANCY WALKING TIME LIKE
