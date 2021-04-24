@@ -1,8 +1,8 @@
 clear;
 
 % Constants
-lambda = 10;            % Person arrival rate (per hour)
-mu_g = 20 /60/60;       % Mean time to process person at gate (seconds to hours)
+lambda = 120;            % Person arrival rate (per hour)
+mu_g = 60 /60/60;       % Mean time to process person at gate (seconds to hours)
 offset_g = 10 /60/60;   % Max variance in process time at the gate (seconds to hours)
 mu_w = 1 ./60;     % Mean time for someone to walk from place to place (minutes to hours)
 mu = [2 3] ./60;        % Mean time for ride to finish (minutes to hours)
@@ -74,7 +74,8 @@ while time < max_time
             % decide if visitor leaves
             if rand() < leave
                 total_in_park = total_in_park - 1; % visitor leaves
-                return;
+                t_walking = time + (expon(mu_w) / walking); % set time next person will finish walking
+                continue;
             end
             
             % if they stay, decide what ride they go on next
@@ -90,14 +91,26 @@ while time < max_time
             
             t_walking = time + (expon(mu_w) / walking); % set time next person will finish walking
             
-        case 4 % ride 1 finishes
-            %%% HERE, WE ARE ALSO GONNA HAVE TO SET FANCY WALKING TIME LIKE
-            %%% ABOVE %%%
+        otherwise % ride finishes
+            i = index - 3; % get ride index, 3 is number of cases prior to ride cases
             
-        case 5 % ride 2 finishes
-            %%% HERE, WE ARE ALSO GONNA HAVE TO SET FANCY WALKING TIME LIKE
-            %%% ABOVE %%%
+            % n people get off the ride and walk around, n = capacity
+            walking = walking + capacity(i);
+            t_walking = time + (expon(mu_w) / walking); % update time someone will finish walking
+            
+            if q(i) >= capacity(i) % if there's enough people in line
+                q(i) = q(i) - capacity(i); % remove people from queue
+                t_ride(i) = time + (give_or_take(mu(i), offset_r(i))); % set time when ride will finish
+                busy(i) = true;
+            else
+                busy(i) = false;
+                t_ride(i) = inf;
+            end
     end
+    
+    % Draw on the visualization
+    
+    
 end
 
 % Analysis
