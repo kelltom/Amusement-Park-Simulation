@@ -78,13 +78,13 @@ while time < max_time
             end
             
             % if they stay, decide what ride they go on next
-            choice = randi([1 length(q)]); % get ride index
-            q(choice) = q(choice) + 1; % get in line
-            if busy(choice) == false % if the ride is not active
-                if q(choice) >= capacity(choice) % and there's enough ppl in line to fill the ride
-                    q(choice) = q(choice) - capacity(choice); % remove people from queue
-                    t_ride(choice) = time + (give_or_take(mu(choice), offset_r)); % set time when ride will finish
-                    busy(choice) = true;
+            i = randi([1 length(q)]); % get ride index
+            q(i) = q(i) + 1; % get in line
+            if busy(i) == false % if the ride is not active
+                if q(i) >= capacity(i) % and there's enough ppl in line to fill the ride
+                    q(i) = q(i) - capacity(i); % remove people from queue
+                    t_ride(i) = time + (give_or_take(mu(i), offset_r(i))); % set time when ride will finish
+                    busy(i) = true;
                 end
             end
             
