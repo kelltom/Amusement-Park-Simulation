@@ -1,7 +1,7 @@
 clear;
 
 % Constants
-lambda = 120;            % Person arrival rate (per hour)
+lambda = 100;            % Person arrival rate (per hour)
 mu_g = 60 /60/60;       % Mean time to process person at gate (seconds to hours)
 offset_g = 10 /60/60;   % Max variance in process time at the gate (seconds to hours)
 mu_w = 1 ./60;     % Mean time for someone to walk from place to place (minutes to hours)
@@ -114,6 +114,13 @@ while time < max_time
 end
 
 % Analysis
+% Plot x and y vs t as a stairstep graph
+t(k) = time;  % add last point
+a(k) = q_gate + busy_g;
+stairs(t, a);
+xlim([0 time]);  % Set x axis limits, y will be auto
+xlabel("Time (hours)");
+ylabel("Ppl at the gate");
 
 % Returns a positive random number chosen from an exponential distribution
 % with mean value 'mean'.
